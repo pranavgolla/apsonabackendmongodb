@@ -80,22 +80,29 @@ exports.updateNote = async (req, res) => {
 
 
 exports.deleteNote = async (req, res) => {
-  const { userEmail } = req.body;
+  const { userEmail } = req.body; // Make sure userEmail is provided in the request body
+
+  if (!userEmail) {
+    return res.status(400).json({ msg: 'User email is required' });
+  }
+
   try {
-    let note = await Note.findOne({ _id: req.params.id, userEmail });
+    // Attempt to find and delete the note
+    const note = await Note.findOneAndDelete({ _id: req.params.id, userEmail });
 
     if (!note) {
       return res.status(404).json({ msg: 'Note not found' });
     }
 
-    await Note.findOneAndRemove({ _id: req.params.id, userEmail });
-
     res.json({ msg: 'Note removed' });
   } catch (err) {
     console.error(err.message);
+
+    // Handle errors based on type and status code
     if (err.kind === 'ObjectId') {
       return res.status(404).json({ msg: 'Note not found' });
     }
+    
     res.status(500).send('Server error');
   }
 };
